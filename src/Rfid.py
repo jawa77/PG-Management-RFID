@@ -24,23 +24,22 @@ class Rfid:
             
             times_data = document.get("times")
             times_data[current_date] = times_data.get(current_date,[])
-            times_data[current_date].append(currentTime)
+            
             # users.update_one({"_id": document["_id"]}, {"$set": {"times": times_data}})
 
             present="in"
             if device==1:
-               
-               if document["present"]=="in":
-                  return "alreadyIn"
-               else:
-                  present="in"
+               # if document["present"]=="in":
+               #    return "alreadyIn"
+               # else:
+               present="in"
             else:
              
-               if document["present"]=="out":
-                  return "alreadyOut"
-               else:
-                  present="out"
-            
+               # if document["present"]=="out":
+               #    return "alreadyOut"
+               # else:
+               present="out"
+            times_data[current_date].append({present: currentTime})
             users.update_one({"_id": document["_id"]}, {"$set": {"times": times_data,"present":present}})
             
             return present
@@ -88,9 +87,10 @@ class Rfid:
                if activetime <= current_time <= active_end:
                    attempt=Rfid.Entry(rfidno,device)
                    if attempt==0:
-                      return "card not allowed"
+                     return "cardNotAllowed"
                    else:
-                      return f"{existing_doc['username']} {attempt}"
+                     #  return f"{existing_doc['username']} {attempt}"
+                     return attempt
                 
                elif restrictedTime <= current_time <= restrictedEnd:
                    a=Rfid.DailyextrTimePermission(int(existing_doc['allowedUntill']),device,existing_doc['username'],existing_doc['oneDayPermission'])

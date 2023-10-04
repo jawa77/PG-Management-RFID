@@ -24,14 +24,15 @@ def write():
 
 @bp.route("/readRfid", methods=['POST'])
 def read():
-      if 'rfidno' in request.form:
+      if 'rfidno' in request.form and 'device' in request.form:
          rfidNo = request.form['rfidno']
+         device=request.form['device']
       
          pattern = r'[~!#$%^&*()+{}\[\]:,;"\'<>/\|\\]'
          rfidNo=re.sub(pattern, '', rfidNo)
          
   
-         a=Rfid.ReadRfid(rfidNo,2)
+         a=Rfid.ReadRfid(rfidNo,int(device))
          return str(a)      
 
 @bp.route("/SetOneDayPermission", methods=['POST'])
