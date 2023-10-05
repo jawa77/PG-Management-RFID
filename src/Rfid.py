@@ -1,13 +1,14 @@
 from src.Database import Database
+from src.Users import Users
 from time import time
 import json
 import arrow
-from flask import  jsonify
+from flask import jsonify
 import datetime
 
 
 db = Database.get_connection()
-users = db.user
+rfid = db.rfid_data
 
 class Rfid:
 
@@ -19,61 +20,68 @@ class Rfid:
 
         currentTime = f"{hours}:{minutes}"
 
-        document = users.find_one({"rfid": rfidno})
+        document = rfid.find_one({"rfid": rfidno})
         if document:
-            
-            times_data = document.get("times")
+            times_data = document.get("logs")
             times_data[current_date] = times_data.get(current_date,[])
             
-            # users.update_one({"_id": document["_id"]}, {"$set": {"times": times_data}})
+            # rfid.update_one({"_id": document["_id"]}, {"$set": {"logs": times_data}})
 
             present="in"
+            credit=int(document['creditScore'])
             if device==1:
-               # if document["present"]=="in":
-               #    return "alreadyIn"
-               # else:
-               present="in"
-            else:
-             
-               # if document["present"]=="out":
-               #    return "alreadyOut"
-               # else:
-               present="out"
+               if document["present"]=="in":
+                  credit=credit+1   
+                  present="in"  
+               else:
+                  present="in"
+            else:   
+               if document["present"]=="out":
+                  credit=credit+1 
+                  present="out"
+               else:
+                 present="out"
+
             times_data[current_date].append({present: currentTime})
-            users.update_one({"_id": document["_id"]}, {"$set": {"times": times_data,"present":present}})
+            rfid.update_one({"_id": document["_id"]}, {"$set": {"logs": times_data,"present":present,"creditScore":credit}})
             
-            return present
+            print(present,document['username'])
+            return f"{present}  {str(document['username'])}"
         else:
             return 0
 
     
     @staticmethod
-    def WriteRfid(rfidno,user,allowingTimeUntil=22,oneDayPermission=0):
+    def WriteRfid(rfidno,user,age,phoneNum,roomNum,adharNum,location,allowingTimeUntil=22,oneDayPermission=0):
     # Check if rfidno already exists in the collection
-       existing_doc = users.find_one({"rfid": rfidno})
+       existing_doc = rfid.find_one({"rfid": rfidno})
        
        if existing_doc:
         # RFID number already exists, return an error message or handle it as needed
         return "RFID number already exists"
        else:
         # RFID number is not present, insert the new document
-        _id = users.insert_one({
+        _id = rfid.insert_one({
             "rfid": rfidno,
             "username": user,
             "Card_start": time(),
             "active":0,
             "present":"in",
+            "creditScore":0,
             "allowedUntill":allowingTimeUntil,
             "oneDayPermission":oneDayPermission,
-            "times":{}
+            "logs":{},
+            "age":int(age)
 
         })
+        Users.adduser(rfidno,user,age,phoneNum,roomNum,adharNum,location)
+
         return str(_id.inserted_id)
        
     @staticmethod
     def ReadRfid(rfidno,device):
        
-        existing_doc = users.find_one({"rfid": rfidno})
+        existing_doc = rfid.find_one({"rfid": rfidno})
     #    print(existing_doc)
         if existing_doc: 
             if existing_doc['active']==0:      
@@ -122,9 +130,9 @@ class Rfid:
 
     @staticmethod
     def setOneDayPermission(rfidno,dayPermission):
-       existing_doc = users.find_one({"rfid": rfidno})
+       existing_doc = rfid.find_one({"rfid": rfidno})
        if existing_doc:
-          result = users.update_one({"rfid": rfidno}, {"$set": {"oneDayPermission": int(dayPermission)}})
+          result = rfid.update_one({"rfid": rfidno}, {"$set": {"oneDayPermission": int(dayPermission)}})
           return f"update success untill {dayPermission}"
        else:
           return "this card is not allowed"
@@ -135,7 +143,7 @@ class Rfid:
     
     @staticmethod
     def removeAlldayPermissions():
-       result = users.update_many({}, {"$set": {"oneDayPermission": 0}})
+       result = rfid.update_many({}, {"$set": {"oneDayPermission": 0}})
        if result.modified_count > 0:
           return "successfully updated"
        else:
@@ -143,7 +151,7 @@ class Rfid:
        
     @staticmethod   
     def removePersononedayPermission(rfidno):
-       result = users.update_many({"rfid": rfidno}, {"$set": {"oneDayPermission": 0}})
+       result = rfid.update_many({"rfid": rfidno}, {"$set": {"oneDayPermission": 0}})
        if result.modified_count > 0:
           return "successfully Removed "
        else:
@@ -151,20 +159,36 @@ class Rfid:
 
     @staticmethod   
     def changeonedayPermission(rfidno,allowTime):
-       result = users.update_many({"rfid": rfidno}, {"$set": {"oneDayPermission": int(allowTime)}}) 
+       result = rfid.update_many({"rfid": rfidno}, {"$set": {"oneDayPermission": int(allowTime)}}) 
        if result.modified_count > 0:
           return "successfully changed"
        else:
           return "already changed"  
 
     
-
+    @staticmethod
+    def updateAlldata(rfidno,username,DailyUntill,age,ondaypermison=0):
+       existing_doc = rfid.find_one({"rfid": rfidno})
+       if existing_doc:
+          result = rfid.update_one({"rfid": rfidno}, {"$set": {
+            "username": username,
+            "Card_start": time(),
+            "active":0,
+            "present":"in",
+            "creditScore":0,
+            "allowedUntill":DailyUntill,
+            "oneDayPermission":ondaypermison,
+            "logs":{},
+            "age":int(age)}})
+          return "update success "
+       else:
+          return "this card is not allowed"
             
 
     @staticmethod
     def GetallData():
         list1=[]
-        result=users.find()
+        result=rfid.find()
 
         for document in result:
             
@@ -175,8 +199,9 @@ class Rfid:
             human_readable_time = datetime_obj.humanize()
             present=document['present']
             permissionUntill=document['oneDayPermission']
-            times=document['times']
+            logs=document['logs']
             active1=document['active']
+            creditscr=document['creditScore']
             btnclr=""
             activecheck=""
             if active1==0:
@@ -195,9 +220,10 @@ class Rfid:
                 "id":id,
                 "present":present,
                 "permissiontoday":permissionUntill,
-                "times":times,
+                "logs":logs,
                 "active":activecheck,
-                "btnclr":btnclr
+                "btnclr":btnclr,
+                "creditscr":creditscr
             })
 
         return jsonify(list1)
@@ -206,44 +232,48 @@ class Rfid:
 
     @staticmethod
     def getEntryData(rfidno):
-        document = users.find_one({"rfid": rfidno})
-        times_data = document.get("times", ["nodata"])   #.get for manage key if key not present the ret []
-        return times_data
+      document = rfid.find_one({"rfid": rfidno})
+      if document:
+         times_data = document.get("logs", {})  # Get the "times" dictionary, default to an empty dictionary if it's not present
+         return times_data
+      else:
+         return "no logs"
         
        
 
     @staticmethod
     def getEntryDataWITHdate(rfidno,Filterdate):
-      document = users.find_one({"rfid": rfidno})
-      times_data = document.get("times", [])
-      
-      if Filterdate in times_data:
-         specific_date_times = times_data[Filterdate]
-         return jsonify(specific_date_times)
+      document = rfid.find_one({"rfid": rfidno})
+      if document:
+         times_data = document.get("logs", [])
+         if Filterdate in times_data:
+            specific_date_times = times_data[Filterdate]
+            return jsonify(specific_date_times)
+         else:
+            specific_date_times = ["nodata"]
+            return jsonify(specific_date_times)
+
       else:
-         specific_date_times = ["nodata"]
-         return jsonify(specific_date_times)
-
-
+         return "no logs"
         
     @staticmethod
     def InsidePgUser():
-       count = users.count_documents({"present": "in"})
+       count = rfid.count_documents({"present": "in"})
        return int(count)
     
     @staticmethod
     def OutsidePgUser():
-       count = users.count_documents({"present": "out"})
+       count = rfid.count_documents({"present": "out"})
        return int(count)
     
     @staticmethod
     def DeactivateduserCount():
-       count = users.count_documents({"active": 1})
+       count = rfid.count_documents({"active": 1})
        return int(count)
     
     @staticmethod
     def toggleActivate(rfidno):
-      existing_doc = users.find_one({"rfid": rfidno})
+      existing_doc = rfid.find_one({"rfid": rfidno})
       toggle=0
   
       if existing_doc:
@@ -252,14 +282,14 @@ class Rfid:
          else:
             toggle=1
             
-         result = users.update_one({"rfid": rfidno}, {"$set": {"active": int(toggle)}})
+         result = rfid.update_one({"rfid": rfidno}, {"$set": {"active": int(toggle)}})
          return str(toggle)   
       else:
          return "deactivated one"
  
     @staticmethod
     def delUser(rfidno):
-      result = users.delete_one({"rfid": rfidno})
+      result = rfid.delete_one({"rfid": rfidno})
       if result.deleted_count == 1:
          print("Document deleted successfully.")
       else:

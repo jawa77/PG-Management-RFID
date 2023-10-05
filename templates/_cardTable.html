@@ -1,0 +1,79 @@
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-primary text-white mb-4">
+            <div class="card-body align-items-cente ">Available Users
+            </div>
+            
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">View Details</a>
+                <div class="text-white"><h6>{{data1[2]}}</h6></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-warning text-white mb-4">
+            <div class="card-body">Inside PG</div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">View Details</a>
+                <div class="text-white"><h6>{{data1[0]}}</h6></div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-success text-white mb-4">
+            <div class="card-body">Outside PG</div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">View Details</a>
+                <div class="text-white"><h6>{{data1[1]}}</h6></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-danger text-white mb-4">
+            <div class="card-body">deactivted</div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">View Details</a>
+                <div class="text-white"><h6>{{data1[3]}}</h6></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-table me-1"></i>
+        DataTable Example
+    </div>
+    <div class="card-body">
+        <table id="datatablesSimple">
+            <thead>
+                <tr>
+                    <th>username</th>
+                    <th>RfidNo</th>
+                    <th>present</th>
+                    <th>cardCreated</th>
+                    <th>Extend</th>
+                    <th>view</th>
+                    <th>action</th>
+                    <th>logs</th>
+                </tr>
+            </thead>
+         
+            <tbody>
+                {% for item in data %}
+                <tr class="{{item['id']}}">
+                    <td>{{item['username']}}</td>
+                    <td>{{item['rfidno']}}</td>
+                    <td>{{item['present']}}</td>
+                    <td>{{item['card_time']}}</td>
+                    <td>{{item['permissiontoday']}}</td>
+                    <td><button>edit</button></td>
+                    <td><button class="btn {{item['btnclr']}} togBut">{{item['active']}}</button></td>
+                    <td><button class="logBut">logs</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -4,7 +4,7 @@ from src.Rfid import Rfid
 
 bp = Blueprint("home", __name__, url_prefix="/")
 
-@bp.route("/")
+@bp.route("/dashboard")
 def home():
      insi=Rfid.InsidePgUser()
      outsi=Rfid.OutsidePgUser()
@@ -15,6 +15,9 @@ def home():
      print(chatdt)
      chatdt=chatdt.json
      print(chatdt)
-     return render_template('index.html', session=session,data=chatdt,data1=countDta)
+     return render_template('dashboard.html', session=session,data=chatdt,data1=countDta)
 
+@bp.route("/info")
+def info():
+     return render_template('info.html', session=session)
 

@@ -1,8 +1,7 @@
 import json
 
-
 def get_config(key):
-    config_file = "/home/jawa/Desktop/SNA/rfid/config.json" # always use absolute path, not relative path
+    config_file = "/home/jawa/Desktop/SNA/rfidProject/config.json" # always use absolute path, not relative path
     file = open(config_file, "r")
     config = json.loads(file.read())
     file.close()

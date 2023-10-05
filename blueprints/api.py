@@ -6,25 +6,34 @@ bp = Blueprint("apiv1", __name__, url_prefix="/api/v1/")
 import json
 db = Database.get_connection()
 
+@staticmethod
+def remove_special_characters(input_string):
+    pattern = r'[~!#$%^&*()+{}\[\]:,;"\'<>/\|\\]'
+    return re.sub(pattern, '', input_string)
+
+
+ 
 @bp.route("/writeRfid", methods=['POST'])
 def write():
-      if 'rfidno' in request.form and 'user' in request.form:
-         rfidNo = request.form['rfidno']
-         user = request.form['user']
-         
+     if 'rfidno' in request.form and 'user' in request.form and 'age' in request.form and 'roomnum' in request.form and 'adharNum' in request.form and 'phoneNum' in request.form and 'location' in request.form:
+         rfidNo = remove_special_characters(request.form['rfidno'])
+         user = remove_special_characters(request.form['user'])
+         age=remove_special_characters(request.form['age'])
+         roomnum = remove_special_characters(request.form['roomnum'])
+         adhar = remove_special_characters(request.form['adharNum'])
+         phone=remove_special_characters(request.form['phoneNum'])
+         location=remove_special_characters(request.form['location'])
 
-         pattern = r'[~!#$%^&*()+{}\[\]:,;"\'<>/\|\\]'
-         rfidNo=re.sub(pattern, '', rfidNo)
-         user=re.sub(pattern, '', user)
+         
   
-         a=Rfid.WriteRfid(rfidNo,user)
+         a=Rfid.WriteRfid(rfidNo,user,age,phone,roomnum,adhar,location)
          return str(a)
-      else:
+     else:
           return "not enough params"
 
 @bp.route("/readRfid", methods=['POST'])
 def read():
-      if 'rfidno' in request.form and 'device' in request.form:
+      if 'rfidno' in request.form and 'device' in request.form :
          rfidNo = request.form['rfidno']
          device=request.form['device']
       
