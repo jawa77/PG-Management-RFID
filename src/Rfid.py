@@ -88,11 +88,14 @@ class Rfid:
                current_time = datetime.datetime.now().time()
                activetime = datetime.time(5, 0)  
                active_end = datetime.time(22, 0)  
-               restrictedTime = datetime.time(22, 0)  
-               restrictedEnd = datetime.time(5, 0)  
+               restrictedTime = datetime.time(22, 2)  
+               restrictedEnd = datetime.time(4, 59) 
+               print(current_time,activetime,active_end)
+               print(restrictedTime,restrictedEnd) 
 
-            
+               
                if activetime <= current_time <= active_end:
+                
                    attempt=Rfid.Entry(rfidno,device)
                    if attempt==0:
                      return "cardNotAllowed"
@@ -100,10 +103,13 @@ class Rfid:
                      #  return f"{existing_doc['username']} {attempt}"
                      return attempt
                 
-               elif restrictedTime <= current_time <= restrictedEnd:
+               else:
+                  
                    a=Rfid.DailyextrTimePermission(int(existing_doc['allowedUntill']),device,existing_doc['username'],existing_doc['oneDayPermission'])
                    Rfid.Entry(rfidno,device)
                    return str(a)
+               # else:
+               #    return "something wrong"
             else:
                return "Deactivated"
  
@@ -116,11 +122,12 @@ class Rfid:
         current_time = datetime.datetime.now().time()
         permisTime = datetime.time(time, 0)  
         restrictedTime = datetime.time(22, 0) 
+        print("hhh")
 
         if restrictedTime <= current_time <= permisTime:          
           return "in" if device == 1 else "out"
         elif daypermission==0:
-           return "ask permission 1234567890" 
+           return "ask permission" 
         elif daypermission >=0:
            permisTime1 = datetime.time(int(daypermission), 0) 
            if restrictedTime <= current_time <= permisTime1:

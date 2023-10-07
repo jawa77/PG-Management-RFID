@@ -1,4 +1,6 @@
 
+{% if session.authenticated  %}
+
 {% extends "master.html" %}
 
 
@@ -10,3 +12,22 @@
 
 
 {% endblock %}
+
+
+
+{% else %}
+   <a href="/">Wait few seconds .....</a>
+   <script>
+    // Function to redirect automatically after 5 seconds
+    function autoRedirect() {
+        // Replace the URL below with the destination URL
+        var destinationURL = "/";
+        window.location.href = destinationURL;
+    }
+
+    // Call the autoRedirect function after 5 seconds
+    setTimeout(autoRedirect, 1000); // 5000 milliseconds = 5 seconds
+   </script>
+
+
+{% endif %}

@@ -5,7 +5,7 @@ from src.Rfid import Rfid
 bp = Blueprint("home", __name__, url_prefix="/")
 
 @bp.route("/dashboard")
-def home():
+def dashboard():
      insi=Rfid.InsidePgUser()
      outsi=Rfid.OutsidePgUser()
      tot=int(insi)+int(outsi)
@@ -21,3 +21,6 @@ def home():
 def info():
      return render_template('info.html', session=session)
 
+@bp.route("/")
+def login():
+     return render_template('login.html', session=session)

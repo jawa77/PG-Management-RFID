@@ -2,11 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, request, sessio
 import re
 from src.Database import Database
 from src.Rfid import Rfid
+from src.Auth import Auth
 bp = Blueprint("apiv1", __name__, url_prefix="/api/v1/")
 import json
 db = Database.get_connection()
 
-@staticmethod
+
 def remove_special_characters(input_string):
     pattern = r'[~!#$%^&*()+{}\[\]:,;"\'<>/\|\\]'
     return re.sub(pattern, '', input_string)
@@ -112,5 +113,42 @@ def toggle():
      if 'rfidno' in request.form:
          rfidNo = request.form['rfidno']
          return Rfid.toggleActivate(rfidNo) 
+     else:
+          return "Not enough params"
+
+@bp.route("/pinverify", methods=['POST'])
+def piv():
+     if 'pin' in request.form:
+         pinNo = request.form['pin']
+         a=Auth.checkPin(str(pinNo))
+        
+         
+         return str(a)
+     else:
+          return "Not enough params"
+     
+@bp.route("/register", methods=['POST'])
+def registr():
+     if 'user' in request.form and 'pass' in request.form:
+         user = request.form['user']
+         passwd = request.form['pass']
+
+         a=Auth.register(user,passwd)
+         return str(a)
+     else:
+          return "Not enough params"
+
+@bp.route("/login", methods=['POST'])
+def logn():
+     if 'user' in request.form and 'pass' in request.form:
+         user = request.form['user']
+         passwd = request.form['pass']
+
+         a=Auth.login(user,passwd)
+         if a==True:
+              session['authenticated']=True
+              return redirect(url_for('home.dashboard'))
+         else:
+              return "authentication failure"
      else:
           return "Not enough params"
