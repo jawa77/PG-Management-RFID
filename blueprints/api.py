@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, session
 import re
+from datetime import datetime
 from src.Database import Database
 from src.Rfid import Rfid
 from src.Auth import Auth
@@ -16,21 +17,31 @@ def remove_special_characters(input_string):
  
 @bp.route("/writeRfid", methods=['POST'])
 def write():
-     if 'rfidno' in request.form and 'user' in request.form and 'age' in request.form and 'roomnum' in request.form and 'adharNum' in request.form and 'phoneNum' in request.form and 'location' in request.form:
-         rfidNo = remove_special_characters(request.form['rfidno'])
-         user = remove_special_characters(request.form['user'])
-         age=remove_special_characters(request.form['age'])
-         roomnum = remove_special_characters(request.form['roomnum'])
-         adhar = remove_special_characters(request.form['adharNum'])
-         phone=remove_special_characters(request.form['phoneNum'])
-         location=remove_special_characters(request.form['location'])
+    required_params = ['rfidNum', 'username', 'password', 'dob', 'phoneNum', 'roomNum', 'adharNum', 'location', 'first_name', 'last_name', 'email', 'section']
 
-         
-  
-         a=Rfid.WriteRfid(rfidNo,user,age,phone,roomnum,adhar,location)
-         return str(a)
-     else:
-          return "not enough params"
+    # Check if all required parameters are in the request form
+    if all(param in request.form for param in required_params):
+        # Remove special characters and store parameters in a dictionary
+        data = {param: remove_special_characters(request.form[param]) for param in required_params}
+        
+        # Calculate age from dob
+        dob = datetime.strptime(data['dob'], "%Y-%m-%d")
+        current_year = datetime.now().year
+        data['age'] = current_year - dob.year - ((datetime.now().month, datetime.now().day) < (dob.month, dob.day))
+
+        # Remove dob from data as we have calculated age from it
+        del data['dob']
+
+        try:
+            response = Rfid.WriteRfid(**data)
+            print(response)
+            return str(response)
+        except Exception as e:
+            # Log the exception for debugging purposes (consider using a logging library)
+            print(f"Error writing RFID: {e}")
+            return "Error processing request", 500
+    else:
+        return "Not enough parameters", 400
 
 @bp.route("/readRfid", methods=['POST'])
 def read():

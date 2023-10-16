@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, session
-import json
+import requests
+from flask import jsonify
 from src.Rfid import Rfid
 from src.Auth import Auth
 
@@ -35,3 +36,42 @@ def login():
 @bp.route("/logs")
 def loggs():
      return render_template('logview.html', session=session)
+
+
+@bp.route("/register", methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        # Extract data from the form
+        data = {
+            'first_name': request.form.get('first_name'),
+            'last_name': request.form.get('last_name'),
+            'email': request.form.get('email'),
+            'roomNum': request.form.get('roomNum'),
+            'section': request.form.get('section'),
+            'location': request.form.get('location'),
+            'dob': request.form.get('dob'),
+            'phoneNum': request.form.get('phone'),
+            'adharNum': request.form.get('adharNum'),
+            'rfidNum': request.form.get('rfid')
+        }
+        data['username'], data['password'] = Auth.register()
+
+        # Make the API request
+        try:
+            response = requests.post("http://127.0.0.1:7000/api/v1/writeRfid", data=data)
+            
+            if response.status_code == 200:
+                # Handle successful API response if necessary
+                pass
+            else:
+                # Handle errors returned by the API if necessary
+                pass
+
+        except requests.RequestException as e:
+            # Handle request exceptions if necessary
+            pass
+
+        # Render the data.html template with the form data
+        return render_template('data.html', **data)
+
+    return render_template('register.html', session=session)

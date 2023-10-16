@@ -3,8 +3,9 @@ from src.Users import Users
 from src.Auth import Auth
 from src.Xlsheet import Xlsheet
 from time import time
-import json
+from werkzeug.security import generate_password_hash
 import arrow
+import logging
 from flask import jsonify
 import datetime
 
@@ -53,33 +54,43 @@ class Rfid:
         else:
             return 0
 
-    
+   
+    ALLOWING_TIME_UNTIL_DEFAULT = 22
+    ONE_DAY_PERMISSION_DEFAULT = 0
     @staticmethod
-    def WriteRfid(rfidno,user,age,phoneNum,roomNum,adharNum,location,allowingTimeUntil=22,oneDayPermission=0):
-    # Check if rfidno already exists in the collection
-       existing_doc = rfid.find_one({"rfid": rfidno})
-       
-       if existing_doc:
-        # RFID number already exists, return an error message or handle it as needed
-        return "RFID number already exists"
-       else:
-        # RFID number is not present, insert the new document
-        _id = rfid.insert_one({
-            "rfid": rfidno,
-            "username": user,
-            "Card_start": time(),
-            "active":0,
-            "present":"in",
-            "creditScore":0,
-            "allowedUntill":allowingTimeUntil,
-            "oneDayPermission":oneDayPermission,
-            "logs":{},
-            "age":int(age)
+    def WriteRfid(rfidNum, username, password, age, phoneNum, roomNum, adharNum, location, first_name, last_name, email, section, allowingTimeUntil=ALLOWING_TIME_UNTIL_DEFAULT, oneDayPermission=ONE_DAY_PERMISSION_DEFAULT):
+      try:
+         # Check if rfidNum already exists in the collection
+         existing_doc = rfid.find_one({"rfidNum": rfidNum})
 
-        })
-        Users.adduser(rfidno,user,age,phoneNum,roomNum,adharNum,location)
+         if existing_doc:
+               # RFID number already exists, return an error message
+               return "RFID number already exists", 400
 
-        return str(_id.inserted_id)
+         # Hash the password before storing
+         hashed_password = generate_password_hash(password)
+
+         # RFID number is not present, insert the new document
+         _id = rfid.insert_one({
+               "rfidNum": rfidNum,
+               "username": username,
+               "roomNum": roomNum,
+               "section": section,
+               "Card_start": time(),
+               "active": 0,
+               "present": "in",
+               "creditScore": 0,
+               "allowedUntill": allowingTimeUntil,
+               "oneDayPermission": oneDayPermission,
+               "logs": {},
+         })
+
+         Users.adduser(rfidNum, username, hashed_password, age, phoneNum, roomNum, adharNum, location, first_name, last_name, email, section)
+
+         return 200
+      except Exception as e:
+         logging.error(f"Error writing RFID: {e}")
+         return "An error occurred while processing the request", 500
        
     @staticmethod
     def ReadRfid(rfidno,device):

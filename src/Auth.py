@@ -1,14 +1,6 @@
-# login sess set
-#otp pin generate
-
 from src.Database import Database
-from src.Users import Users
-from time import time
-import json
-import arrow
 from flask import jsonify 
-import datetime
-
+from .pg_manager import PGManager
 
 db = Database.get_connection()
 auths = db.auth
@@ -28,7 +20,8 @@ class Auth:
     
     
     @staticmethod
-    def register(user,passwd):
+    def register():
+        user, passwd = PGManager().create_pg_credentials()
         existing_doc = auths.find_one({"username": user})
         if existing_doc:
             return "user already Exists"
@@ -36,11 +29,12 @@ class Auth:
         else:
             _id = auths.insert_one({
             "password": passwd,
-            "username": user,
-            "pinNumber":"1234"
+            "username": user
             })
 
-            return str(_id.inserted_id)
+            # return str(_id.inserted_id)
+            return user, passwd
+
          
 
        

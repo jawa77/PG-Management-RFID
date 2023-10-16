@@ -8,17 +8,23 @@ users = db.users
 class Users:
 
     @staticmethod
-    def adduser(rfidNum,username,age,phoneNum,roomNum,adharNum,location):  
+    def adduser(rfidNum,username,password,age,phoneNum,roomNum,adharNum,location,first_name,last_name,email,section):  
         _id = users.insert_one({
-            "rfid": rfidNum,
+            "rfidNum": rfidNum,
             "username": username,
+            "password": password,
             "age": int(age),
-            "phone":phoneNum,
+            "phoneNum":phoneNum,
             "roomNum":roomNum,
             "adharNum":adharNum,
-            "location":location
+            "location":location,
+            "first_name":first_name,
+            "last_name":last_name,
+            "email":email,
+            "section":section
+
         })
-        return str(_id.inserted_id)
+        return 200
     
     @staticmethod
     def updateData(rfidNum,username,age,phoneNum,roomNum,adharNum,location):  

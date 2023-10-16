@@ -1,5 +1,5 @@
 {
-    "mangodb_conection_string":"mongodb://jawa:password@localhost:27017/?authMechanism=DEFAULT",
+    "mangodb_conection_string":"mongodb+srv://venkateshvenki404224:Qwertyuiop%40123@cluster0.uzf3psm.mongodb.net",
     "mongodb_database":"Rfid",
     "secret_key": "Vr4d5lvRh5j6FJ5Cmbzm"
 
