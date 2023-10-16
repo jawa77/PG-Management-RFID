@@ -1,5 +1,7 @@
 from src.Database import Database
 from src.Users import Users
+from src.Auth import Auth
+from src.Xlsheet import Xlsheet
 from time import time
 import json
 import arrow
@@ -41,7 +43,8 @@ class Rfid:
                   present="out"
                else:
                  present="out"
-
+            
+            Xlsheet.writexl(document['username'],current_date,currentTime)
             times_data[current_date].append({present: currentTime})
             rfid.update_one({"_id": document["_id"]}, {"$set": {"logs": times_data,"present":present,"creditScore":credit}})
             
@@ -82,16 +85,20 @@ class Rfid:
     def ReadRfid(rfidno,device):
        
         existing_doc = rfid.find_one({"rfid": rfidno})
-    #    print(existing_doc)
+        existing_doc1 = Auth.getALL()
+        actTime=existing_doc1.json
+        start = actTime[0]['activestart']
+        end = actTime[0]['activeEnd']
+       
+  
         if existing_doc: 
             if existing_doc['active']==0:      
                current_time = datetime.datetime.now().time()
-               activetime = datetime.time(5, 0)  
-               active_end = datetime.time(22, 0)  
-               restrictedTime = datetime.time(22, 2)  
-               restrictedEnd = datetime.time(4, 59) 
-               print(current_time,activetime,active_end)
-               print(restrictedTime,restrictedEnd) 
+               activetime = datetime.time(int(start), 0)  
+               active_end = datetime.time(int(end), 0)  
+               # restrictedTime = datetime.time(22, 2)  
+               # restrictedEnd = datetime.time(4, 59) 
+             
 
                
                if activetime <= current_time <= active_end:
@@ -303,4 +310,86 @@ class Rfid:
          print("Document not found or not deleted.")
 
 
+    @staticmethod
+    def totaluserPg():
+      result =rfid.find({"active": 0})
+   
+      list1=[]
+      for document in result:
+            
+            id=str(document['_id'])
+            rfidno=document['rfid']
+            username=document['username']
+          
+          
+            list1.append({
+                "rfidno":rfidno,
+                "username":username,
+                "id":id
+        
+            })
+
+      return jsonify(list1)
       
+
+    @staticmethod
+    def InsideUsername():
+      result =rfid.find({ "$and": [{"present": "in"},{"active": 0}]})
+   
+      list1=[]
+      for document in result:
+            
+            id=str(document['_id'])
+            rfidno=document['rfid']
+            username=document['username']
+          
+          
+            list1.append({
+                "rfidno":rfidno,
+                "username":username,
+                "id":id
+        
+            })
+
+      return jsonify(list1)
+
+    @staticmethod
+    def outsideUsername():
+      result =rfid.find({ "$and": [{"present": "out"},{"active": 0}]})
+   
+      list1=[]
+      for document in result:
+            
+            id=str(document['_id'])
+            rfidno=document['rfid']
+            username=document['username']
+          
+          
+            list1.append({
+                "rfidno":rfidno,
+                "username":username,
+                "id":id
+        
+            })
+
+      return jsonify(list1)
+    
+    @staticmethod
+    def deactiveUsernam():
+      result =rfid.find({"active": 1})
+   
+      list1=[]
+      for document in result:
+            id=str(document['_id'])
+            rfidno=document['rfid']
+            username=document['username']
+          
+          
+            list1.append({
+                "rfidno":rfidno,
+                "username":username,
+                "id":id
+        
+            })
+
+      return jsonify(list1)

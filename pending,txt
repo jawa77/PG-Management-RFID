@@ -1,10 +1,11 @@
 logic
-auth session
-multithreading and services
+
+decorator for api verify authenticated
+and services in rasp
 
 ui
 
-all login and api permission
+api permission
 
 hw
 

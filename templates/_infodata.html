@@ -1,1 +1,24 @@
-<h1>haa</h1>
+
+
+<!-- <h5>{{data[0]}}</h5> -->
+
+<form action="/api/v1/updateResTime" method="post">
+    <div class="form-group">
+      <label for="email">Username</label>
+      <input type="text" class="form-control" name="username" value="{{data[0]['username']}}">
+    </div>
+    <div class="form-group">
+      <label for="pwd">Pin</label>
+      <input type="text" class="form-control" name="pin"  value="{{data[0]['pin']}}">
+    </div>
+    <div class="form-group">
+        <label for="pwd">open</label>
+        <input type="text" class="form-control" name="actTmStart"  value="{{data[0]['activestart']}}">
+      </div>
+      <div class="form-group">
+        <label for="pwd">close</label>
+        <input type="text" class="form-control"  name="actTmEnd" value="{{data[0]['activeEnd']}}">
+      </div>
+      <br>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>

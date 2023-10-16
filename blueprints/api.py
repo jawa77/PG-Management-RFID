@@ -152,3 +152,37 @@ def logn():
               return "authentication failure"
      else:
           return "Not enough params"
+     
+
+@bp.route("/updateResTime",methods=['POST'])
+def updtRes():
+     if 'username' in request.form and 'actTmStart' in request.form and 'actTmEnd' in request.form and 'pin' in request.form:
+          user = request.form['username']
+          startTime = request.form['actTmStart']
+          endTime=request.form['actTmEnd']
+          pin=request.form['pin']
+
+          Auth.updateAll(user,startTime,endTime,pin)
+          return "success"
+     else:
+          return "not enough paramss"
+
+@bp.route("/availuser",methods=['POST'])
+def availuser():
+     a=Rfid.totaluserPg()
+     return a
+
+@bp.route("/insidePGUsername",methods=['POST'])
+def insiderName():
+     a=Rfid.InsideUsername()
+     return a
+   
+@bp.route("/outsidePGUsername",methods=['POST'])
+def outsiderName():
+     a=Rfid.outsideUsername()
+     return a
+
+@bp.route("/deactiveUser",methods=['POST'])
+def deactUsernme():
+     a=Rfid.deactiveUsernam()
+     return a

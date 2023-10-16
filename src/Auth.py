@@ -26,8 +26,6 @@ class Auth:
         else:
             return "contact tech team"
     
-   
-
     
     @staticmethod
     def register(user,passwd):
@@ -58,3 +56,40 @@ class Auth:
         else:
             return "do register"
           
+
+    @staticmethod
+    def getALL():
+        result=auths.find()
+        list1=[]
+        for document in result:
+            id=str(document['_id'])
+            pin=document['pinNumber']
+            username=document['username']
+            activeStart = document['activetime']
+            activeEnd = document['activeEnd']
+
+            list1.append({
+                "activestart":activeStart,
+                "activeEnd":activeEnd,
+                "pin":pin,
+                "username":username,
+                "id":id
+               
+            })
+
+        return jsonify(list1)
+    
+
+            
+    @staticmethod
+    def updateAll(username,actiStart,ActiveEnd,pin):
+        document = auths.find_one({"username": username})
+        if document:
+            auths.update_one({"_id": document["_id"]}, {"$set": {"activetime":int(actiStart),"activeEnd":int(ActiveEnd),"pinNumber":str(pin)}})
+           
+        else:
+            return "username Not allowed"
+
+
+
+       
