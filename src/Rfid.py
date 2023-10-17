@@ -3,7 +3,7 @@ from src.Users import Users
 from src.Auth import Auth
 from src.Xlsheet import Xlsheet
 from time import time
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash,check_password_hash
 import arrow
 import logging
 from flask import jsonify

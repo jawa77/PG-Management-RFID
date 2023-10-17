@@ -3,6 +3,7 @@ import requests
 from flask import jsonify
 from src.Rfid import Rfid
 from src.Auth import Auth
+from src.pg_manager import PGManager
 
 bp = Blueprint("home", __name__, url_prefix="/")
 
@@ -54,7 +55,8 @@ def register():
             'adharNum': request.form.get('adharNum'),
             'rfidNum': request.form.get('rfid')
         }
-        data['username'], data['password'] = Auth.register()
+        data['username'], data['password'] = PGManager().create_pg_credentials()
+
 
         # Make the API request
         try:

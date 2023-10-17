@@ -1,59 +1,48 @@
 from src.Database import Database
 from flask import jsonify 
-from .pg_manager import PGManager
+from werkzeug.security import check_password_hash
+
 
 db = Database.get_connection()
-auths = db.auth
+users = db.users
 
 class Auth:
 
-    @staticmethod
-    def checkPin(pin):
-        doc=auths.find_one()
-        if doc:
-            if pin==doc['pinNumber']:
-                return "success"
-            else:
-                return "wrong"
-        else:
-            return "contact tech team"
+    # @staticmethod
+    # def checkPin(pin):
+    #     doc=users.find_one()
+    #     if doc:
+    #         if pin==doc['pinNumber']:
+                
+    #             return "success"
+    #         else:
+    #             return "wrong"
+    #     else:
+    #         return "contact tech team"
     
-    
-    @staticmethod
-    def register():
-        user, passwd = PGManager().create_pg_credentials()
-        existing_doc = auths.find_one({"username": user})
-        if existing_doc:
-            return "user already Exists"
-       
-        else:
-            _id = auths.insert_one({
-            "password": passwd,
-            "username": user
-            })
-
-            # return str(_id.inserted_id)
-            return user, passwd
-
-         
-
        
     @staticmethod
-    def login(user,passwd):
-        existing_doc = auths.find_one({"username": user})
-        if existing_doc:
-            if existing_doc['username']==user and existing_doc['password']==passwd:
-                return True
+    def login(user, passwd):
+        try:
+            existing_doc = users.find_one({"username": user})
+
+            if existing_doc:
+                if check_password_hash(existing_doc['password'], passwd):
+                    return 200
+                else:
+                    return 400
             else:
-                return False
-       
-        else:
-            return "do register"
+                return 404
+
+        except Exception as e:
+            # Handle potential database or other exceptions
+            print(f"Error during login: {e}")
+            return False, "An error occurred during login"
           
 
     @staticmethod
     def getALL():
-        result=auths.find()
+        result=users.find()
         list1=[]
         for document in result:
             id=str(document['_id'])
@@ -77,9 +66,9 @@ class Auth:
             
     @staticmethod
     def updateAll(username,actiStart,ActiveEnd,pin):
-        document = auths.find_one({"username": username})
+        document = users.find_one({"username": username})
         if document:
-            auths.update_one({"_id": document["_id"]}, {"$set": {"activetime":int(actiStart),"activeEnd":int(ActiveEnd),"pinNumber":str(pin)}})
+            users.update_one({"_id": document["_id"]}, {"$set": {"activetime":int(actiStart),"activeEnd":int(ActiveEnd),"pinNumber":str(pin)}})
            
         else:
             return "username Not allowed"
