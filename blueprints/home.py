@@ -77,3 +77,15 @@ def register():
         return render_template('data.html', **data)
 
     return render_template('register.html', session=session)
+
+@bp.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Extract data from the form
+        data = {
+            'username': request.form.get('username'),
+            'password': request.form.get('password')
+        }
+
+
+    return render_template('logview.html', session=session)
