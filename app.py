@@ -1,11 +1,11 @@
 from flask import Flask
 from src import get_config
-from blueprints import home,api
+from blueprints import route,api
 
 app = Flask(__name__, static_folder='assets', static_url_path="/")
 app.secret_key = get_config("secret_key")
 
-app.register_blueprint(home.bp)
+app.register_blueprint(route.bp)
 app.register_blueprint(api.bp)
 
 

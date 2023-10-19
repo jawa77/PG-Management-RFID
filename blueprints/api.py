@@ -6,42 +6,14 @@ from src.Rfid import Rfid
 from src.Auth import Auth
 bp = Blueprint("apiv1", __name__, url_prefix="/api/v1/")
 import json
-db = Database.get_connection()
 
 
 def remove_special_characters(input_string):
     pattern = r'[~!#$%^&*()+{}\[\]:,;"\'<>/\|\\]'
     return re.sub(pattern, '', input_string)
 
-
- 
-@bp.route("/writeRfid", methods=['POST'])
-def write():
-    required_params = ['rfidNum', 'username', 'password', 'dob', 'phoneNum', 'roomNum', 'adharNum', 'location', 'first_name', 'last_name', 'email', 'section']
-
-    # Check if all required parameters are in the request form
-    if all(param in request.form for param in required_params):
-        # Remove special characters and store parameters in a dictionary
-        data = {param: remove_special_characters(request.form[param]) for param in required_params}
-        
-        # Calculate age from dob
-        dob = datetime.strptime(data['dob'], "%Y-%m-%d")
-        current_year = datetime.now().year
-        data['age'] = current_year - dob.year - ((datetime.now().month, datetime.now().day) < (dob.month, dob.day))
-
-        # Remove dob from data as we have calculated age from it
-        del data['dob']
-
-        try:
-            response = Rfid.WriteRfid(**data)
-            print(response)
-            return str(response)
-        except Exception as e:
-            # Log the exception for debugging purposes (consider using a logging library)
-            print(f"Error writing RFID: {e}")
-            return "Error processing request", 500
-    else:
-        return "Not enough parameters", 400
+def write(rfidNum, username, password, dob, phoneNum, roomNum, adharNum, location, first_name, last_name, email, section):
+     
 
 @bp.route("/readRfid", methods=['POST'])
 def read():
@@ -156,10 +128,10 @@ def logn():
          passwd = request.form['pass']
 
          a=Auth.login(user,passwd)
-         if a==True:
+         if a==200:
               session['authenticated']=True
-              return redirect(url_for('home.dashboard'))
-         else:
+              return redirect(url_for('route.dashboard'))
+         elif a==400:
               return "authentication failure"
      else:
           return "Not enough params"

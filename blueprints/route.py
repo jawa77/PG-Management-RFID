@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, session
 import requests
-from flask import jsonify
 from src.Rfid import Rfid
 from src.Auth import Auth
 from src.pg_manager import PGManager
@@ -28,11 +27,6 @@ def info():
      existing_doc1 = Auth.getALL()
      datas=existing_doc1.json
      return render_template('info.html', session=session, data=datas)
-
-@bp.route("/")
-def login():
-     return render_template('login.html', session=session)
-
 
 @bp.route("/logs")
 def loggs():
@@ -77,15 +71,3 @@ def register():
         return render_template('data.html', **data)
 
     return render_template('register.html', session=session)
-
-@bp.route("/login", methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        # Extract data from the form
-        data = {
-            'username': request.form.get('username'),
-            'password': request.form.get('password')
-        }
-
-
-    return render_template('logview.html', session=session)

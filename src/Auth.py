@@ -25,11 +25,15 @@ class Auth:
     def login(user, passwd):
         try:
             existing_doc = users.find_one({"username": user})
+            print(existing_doc)
+            print(existing_doc['password'])
 
             if existing_doc:
                 if check_password_hash(existing_doc['password'], passwd):
+                    print("Login successful")
                     return 200
                 else:
+                    print("Incorrect password", passwd)
                     return 400
             else:
                 return 404
