@@ -1,5 +1,5 @@
 from src.Database import Database
-from src.Users import Users
+from src.UserController import Users
 from src.Auth import Auth
 from src.Xlsheet import Xlsheet
 from time import time

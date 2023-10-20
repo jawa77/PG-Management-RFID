@@ -3,8 +3,8 @@ import requests
 from src.Rfid import Rfid
 from src.Auth import Auth
 from src.pg_manager import PGManager
+bp = Blueprint("apiv1", __name__, url_prefix="/api/v1/")
 
-bp = Blueprint("home", __name__, url_prefix="/")
 
 @bp.route("/dashboard")
 def dashboard():
@@ -27,6 +27,11 @@ def info():
      existing_doc1 = Auth.getALL()
      datas=existing_doc1.json
      return render_template('info.html', session=session, data=datas)
+
+@bp.route("/")
+def login():
+     return render_template('login.html', session=session)
+
 
 @bp.route("/logs")
 def loggs():
@@ -71,3 +76,4 @@ def register():
         return render_template('data.html', **data)
 
     return render_template('register.html', session=session)
+
