@@ -5,11 +5,14 @@ import requests
 import threading
 from RPLCD.i2c import CharLCD
 from pad4pi import rpi_gpio
+import subprocess
+import multiprocessing
+import os
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-
+url='http://192.168.83.95:7000'
 
 KEYPAD = [
     [1, 2, 3, "A"],
@@ -20,16 +23,39 @@ KEYPAD = [
 
 ROW_PINS = [5, 6, 13, 19] # BCM numbering
 COL_PINS = [26, 17, 27, 22] # BCM numbering
+TRIG_PIN = 15
+ECHO_PIN = 14
+
+GPIO.setup(TRIG_PIN, GPIO.OUT)
+GPIO.setup(ECHO_PIN, GPIO.IN)
 
 greenPin = 21
 redpin=20
 relaypin=16
 
+def distance():
+    # Send a trigger pulse
+    GPIO.output(TRIG_PIN, GPIO.HIGH)
+    time.sleep(0.00001)
+    GPIO.output(TRIG_PIN, GPIO.LOW)
 
+    # Initialize variables
+    pulse_start = time.time()
+    pulse_end = time.time()
 
+    # Wait for the echo to start
+    while GPIO.input(ECHO_PIN) == 0:
+        pulse_start = time.time()
 
+    # Wait for the echo to end
+    while GPIO.input(ECHO_PIN) == 1:
+        pulse_end = time.time()
 
+    # Calculate the distance in centimeters
+    pulse_duration = pulse_end - pulse_start
+    distance_cm = pulse_duration * 17150
 
+    return distance_cm
 
 def printdisplay(data):
     try:
@@ -37,7 +63,7 @@ def printdisplay(data):
         lcd.clear()
         lcd.write_string(str(data))
         time.sleep(1)
-        lcd.clear()
+      
     except:
         pass
 
@@ -64,18 +90,22 @@ def red():
     print("LED off")
     GPIO.output(redpin, 0)
 
-def relay():
+def relayof():
+    GPIO.setup(relaypin, GPIO.OUT)
+    GPIO.output(relaypin,0)
+    time.sleep(2)
+    GPIO.cleanup(relaypin)
+    time.sleep(5)
+
+
+def relayon():
     GPIO.setup(relaypin, GPIO.OUT)
     GPIO.output(relaypin,1)
-    time.sleep(1)
-    GPIO.output(relaypin,0)
-
-
 
 
 
 def writerr_api(rfid,user,age,phoneNum,roomNum,adharNum,location):
-    API_URL = 'http://192.168.50.95:7000/api/v1/writeRfid'
+    API_URL = url+'/api/v1/writeRfid'
     form_data = {
         'rfidno': rfid,
         'user': user,
@@ -89,7 +119,7 @@ def writerr_api(rfid,user,age,phoneNum,roomNum,adharNum,location):
     print(response.text)
 
 def readerr_api(rfid, device):
-    API_URL = 'http://192.168.50.95:7000/api/v1/readRfid'
+    API_URL = url+'/api/v1/readRfid'
     form_data = {
         'rfidno': rfid,
         'device': device,
@@ -99,16 +129,14 @@ def readerr_api(rfid, device):
     if response.text.startswith("in") or response.text.startswith("out"):
         green()
         printdisplay(str(response.text))
-        relay()
-        GPIO.cleanup(relaypin)
-
-        
+        relayof()
+        relayon()
     else:
         red()
         printdisplay(str(response.text))
 
 def pin_verify(pin):
-    API_URL = 'http://192.168.50.95:7000/api/v1/pinverify'
+    API_URL = url+'/api/v1/pinverify'
     form_data = {
         'pin': pin,
         
@@ -118,18 +146,15 @@ def pin_verify(pin):
     if response.text=="success":
         green()
         printdisplay(str(response.text))
-
-        relay()
-        GPIO.cleanup(relaypin)
-
-        # GPIO.output(relaypin, 0)
+        relayof()
+        relayon()
+       
     else:
         red()
         printdisplay(str(response.text))
 
 
 
-        
 
 def read_db_write():
     reader = SimpleMFRC522()
@@ -153,19 +178,23 @@ def read_db_write():
 
 
 def read_card_and_process():
-    reader = SimpleMFRC522()
-    try:
-        displayInitial("RFID card here")
-        id, text = reader.read()
-        print("Card ID:", id)
-        print("Data:", text)
-        readerr_api(id, 2)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        # GPIO.cleanup()
-        pass
+    dist = distance()
+    print("Distance:", dist, "cm")
 
+    if dist <= 30:
+
+        reader = SimpleMFRC522()
+        try:
+            displayInitial("RFID card here")
+            id, text = reader.read()
+            print("Card ID:", id)
+            print("Data:", text)
+            readerr_api(id, 2)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            # GPIO.cleanup()
+            pass
 
     
 str_list = []
@@ -187,22 +216,23 @@ def print_key(key):
         
         
 
-
-
-
 def tt1():
+ 
     try:
         while True:
+            
             read_card_and_process()
-            #read_db_write()
             time.sleep(1)
+            #read_db_write()
+           
     except KeyboardInterrupt:
         pass
     finally:
       GPIO.cleanup()
 
-def tt2():
 
+def tt2():
+  
     try:
         factory = rpi_gpio.KeypadFactory()
         keypad = factory.create_keypad(keypad=KEYPAD,row_pins=ROW_PINS, col_pins=COL_PINS) # makes assumptions about keypad layout and GPIO pin numbers
@@ -218,12 +248,68 @@ def tt2():
         keypad.cleanup()
 
 
-thread1 = threading.Thread(target=tt1)
-thread2 = threading.Thread(target=tt2)
 
-# Start the threads
-thread1.start()
-thread2.start()
+def check_wifi_connection():
+    try:
+        # Run the 'iwconfig' command to check the wireless interface status
+        result = subprocess.check_output(["iwconfig"], stderr=subprocess.STDOUT, universal_newlines=True)
+        
+        # Check if the output contains the name of your wireless interface (e.g., "wlan0")
+        if "wlan0" in result:
+            return True  # Connected to Wi-Fi
+        else:
+            return False  # Not connected to Wi-Fi
+    except subprocess.CalledProcessError:
+        return False  # An error occurred or the command failed
 
-# if thread1.is_alive() and thread2.is_alive():
-#     print("Thread 1 is running.")
+
+
+def check_url_availability(url):
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+        
+        # Check the response status code
+        if response.status_code == 200:
+            return True  # URL is reachable and active
+        else:
+            return False  # URL is not reachable or returned an error status
+    except requests.ConnectionError:
+        return False  # Unable to connect to the URL
+
+def main():
+    relayon()
+    # while True:
+    if check_wifi_connection():
+        printdisplay("connected to Wi-Fi.")
+        time.sleep(2)
+
+        # Check URL availability
+        if check_url_availability(url):
+            printdisplay("server is active.")
+          
+          
+            process1 = multiprocessing.Process(target=tt1)
+            process2 = multiprocessing.Process(target=tt2)
+
+            process1.start()
+            process2.start()
+            # process1.join()
+            # process2.join()
+            
+            # break
+        else:
+            printdisplay("server is not active")
+            time.sleep(6)
+
+    else:
+        printdisplay("Not connected to Wi-Fi.")
+        time.sleep(6)
+
+            # if thread1.is_alive() and thread2.is_alive():
+            #     print("Thread 1 is running.")
+
+if __name__ == "__main__":
+    main()
+
+    #sudo systemctl restart myscript.service

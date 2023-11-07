@@ -278,6 +278,97 @@
 
 
 
+
+            $('.edits').on('click', function(){
+              var tr = $(this).closest("tr");
+
+// Get the values from the <td> elements within the <tr>
+            var username = tr.find("td:eq(0)").text();
+            var rfid = tr.find("td:eq(1)").text();
+            var todaysPermis = tr.find("td:eq(4)").text();
+            function generateOptions(start, end) {
+                        let options = '';
+                 for (let i = start; i <= end; i++) {
+                  options += `<option value="${i}">${i}</option>`;
+                     }
+                    return options;
+                     }
+
+
+
+    d = new Dialog("Allowed Permission", `
+    <form>
+      <h3>${rfid}</h3>
+        <div class="form-group">
+            <label for="group-name">username</label>
+            <input type="text" class="form-control" id="uname" value="${username}" readonly>
+        </div>
+        <div class="form-group">
+    <label for="group-desc">todayPermission</label>
+    <select class="form-control" id="permis">
+        ${generateOptions(0, 24)}
+        <option value="5" selected>${todaysPermis}</option>
+    </select>
+</div>
+   
+
+      </form>
+
+      
+
+
+    `);
+    d.setButtons([
+        {
+            "name": "Permit",
+            "class": "btn-success btn-add-group",
+            "onClick": function(event){
+                var modal = $(event.data.modal);
+               
+                var timeuntl = modal.find('#permis').val();
+               
+                  $.post('/api/v1/SetOneDayPermission', {
+                        'rfidno': rfid,
+                        'timeuntill': timeuntl
+                    }, function(data, status, xhr){
+                    
+                        $(modal).modal('hide');
+                      
+                    });
+                
+            }
+        },
+        {
+            "name": "Cancel",
+            "class": "btn-secondary",
+            "onClick": function(event){
+                var modal = $(event.data.modal);
+                $(modal).modal('hide');
+            }
+        },
+        {
+            "name": "Delete",
+            "class": "btn-secondary",
+            "onClick": function(event){
+             var modal = $(event.data.modal);
+             $.post('/api/v1/delete', {
+                      'rfidno': rfid,
+                       
+                  }, function(data, status, xhr){
+                    
+                      
+                      
+                    });
+                
+              $(modal).modal('hide');
+            }
+        }
+    ]);
+    d.show();
+      });
+
+
+
         });
 
 

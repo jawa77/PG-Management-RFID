@@ -80,7 +80,13 @@ def getAllUserDta():
         
         return lists
 
-
+@bp.route("/delete", methods=['POST'])
+def delet():
+        if 'rfidno' in request.form:
+          rfidNo = request.form['rfidno']
+          lists=Rfid.delUser(rfidNo)
+          return lists
+        
 @bp.route("/getEntryData", methods=['POST'])
 def entryData():
       if 'rfidno' in request.form:

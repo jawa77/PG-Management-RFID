@@ -87,15 +87,19 @@ class Rfid:
         existing_doc = rfid.find_one({"rfid": rfidno})
         existing_doc1 = Auth.getALL()
         actTime=existing_doc1.json
-        start = actTime[0]['activestart']
-        end = actTime[0]['activeEnd']
+      #   start = actTime[0]['activestart']
+      #   end = actTime[0]['activeEnd']
+        start=0
+        end=22
        
   
         if existing_doc: 
             if existing_doc['active']==0:      
                current_time = datetime.datetime.now().time()
                activetime = datetime.time(int(start), 0)  
-               active_end = datetime.time(int(end), 0)  
+               active_end = datetime.time(int(end), 55)  
+
+
                # restrictedTime = datetime.time(22, 2)  
                # restrictedEnd = datetime.time(4, 59) 
              
@@ -305,9 +309,9 @@ class Rfid:
     def delUser(rfidno):
       result = rfid.delete_one({"rfid": rfidno})
       if result.deleted_count == 1:
-         print("Document deleted successfully.")
+         return "Document deleted successfully."
       else:
-         print("Document not found or not deleted.")
+         return "Document not found or not deleted."
 
 
     @staticmethod
